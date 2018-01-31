@@ -8,6 +8,9 @@
     "fix-code": "eslint . --fix",
     "commit": "git-cz"
   },
+  "engines" : {
+    "node" : ">=8"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/guivic/fabric-node.git"
