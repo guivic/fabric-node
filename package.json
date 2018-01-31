@@ -1,0 +1,43 @@
+{
+  "name": "@guivic/fabric-node",
+  "version": "0.0.1",
+  "description": "node.js helpers to create quickly micro services and API",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "fix-code": "eslint . --fix",
+    "commit": "git-cz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guivic/fabric-node.git"
+  },
+  "keywords": [
+    "guivic",
+    "guivic-fabric-node",
+    "fabric-node"
+  ],
+  "author": "lludol",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/guivic/fabric-node/issues"
+  },
+  "homepage": "https://github.com/guivic/fabric-node#readme",
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "devDependencies": {
+    "commitizen": "^2.9.6",
+    "eslint": "^4.16.0",
+    "eslint-config-lludol": "^0.1.7"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "express-fileupload": "^0.4.0",
+    "joi": "^13.1.1",
+    "raven": "^2.4.0"
+  }
+}
