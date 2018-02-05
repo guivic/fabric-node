@@ -152,11 +152,10 @@ class Route {
 	/**
 	 * Create a route with the router instance.
 	 * @param {String} action - The action (create, index, get, update, delete)
-	 * @param {String} method - get, post, put, delete
-	 * @param {String} endpoint - The route endpoint
+	 * @param {Object} { endpoint, method } - An Obejct with the endpoint and the associated method
 	 * @param {Object} bodySchema - The joi schema associated with the route
 	 */
-	_createRoute(action, method, endpoint, bodySchema = {}) {
+	_createRoute(action, { endpoint, method }, bodySchema = {}) {
 		this._router[method.toLowerCase()](
 			endpoint,
 			expressJoiMiddleware(bodySchema),
