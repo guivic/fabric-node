@@ -1,0 +1,15 @@
+{
+  "name": "microservice-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "microservice.example.js",
+  "scripts": {
+    "start": "node microservice.example.js"
+  },
+  "author": "lludol",
+  "license": "MIT",
+  "dependencies": {
+    "joi": "^13.1.2",
+    "winston-lludol": "^0.0.5"
+  }
+}

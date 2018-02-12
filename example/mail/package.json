@@ -1,0 +1,15 @@
+{
+  "name": "mail-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mail.example.js",
+  "scripts": {
+    "start": "node mail.example.js"
+  },
+  "author": "lludol",
+  "license": "MIT",
+  "dependencies": {
+    "nodemailer-sendgrid": "^1.0.2",
+    "winston-lludol": "^0.0.5"
+  }
+}
