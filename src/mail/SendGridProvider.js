@@ -24,7 +24,7 @@ class Sendgrid extends MailProvider {
 			throw optionsValidated.error;
 		}
 
-		this.options = optionsValidated;
+		this.options = optionsValidated.value;
 	}
 
 	/**
