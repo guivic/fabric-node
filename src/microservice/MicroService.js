@@ -1,9 +1,11 @@
 const express = require('express');
 const Joi = require('joi');
+const cors = require('cors');
 
 const schema = Joi.object().keys({
-	port:       Joi.number().integer().min(0).max(65535).optional().default(3000),
-	initMethod: Joi.func().optional().default(() => Promise.resolve()),
+	port:        Joi.number().integer().min(0).max(65535).optional().default(3000),
+	initMethod:  Joi.func().optional().default(() => Promise.resolve()),
+	corsOptions: Joi.object().optional().default({}),
 });
 
 /**
@@ -22,11 +24,7 @@ class MicroService {
 
 		this.options = value;
 		this.app = express();
-		this.app.use((req, res, next) => {
-			res.header("Access-Control-Allow-Origin", "*");
-			res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-			next();
-		});
+		this.app.use(cors(this.options.corsOptions));
 	}
 
 	/**
