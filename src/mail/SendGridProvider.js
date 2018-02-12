@@ -34,7 +34,7 @@ class Sendgrid extends MailProvider {
 	connect() {
 		this.transporter = nodemailer.createTransport(
 			nodemailerSendgrid({
-				apiKey: this.optionsValidated.apiKey,
+				apiKey: this.options.apiKey,
 			}),
 		);
 		return Promise.resolve();
