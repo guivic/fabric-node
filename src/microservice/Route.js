@@ -1,22 +1,19 @@
-const bodyParser = require('body-parser');
-const express = require('express');
+const Router = require('koa-router');
+const koaBody = require('koa-body');
+const validate = require('koa2-validation');
 const Joi = require('joi');
-const expressJoiMiddleware = require('express-joi-middleware');
-const Raven = require('raven');
 const fileUpload = require('express-fileupload');
-const lodashOmit = require('lodash.omit');
 const lodashPick = require('lodash.pick');
-
-const asyncMiddleware = require('./asyncMiddleware');
+const jwt = require('koa-jwt');
 
 const availableActions = {
 	create: {
 		method:   'POST',
-		endpoint: '/',
+		endpoint: '',
 	},
 	index: {
 		method:   'GET',
-		endpoint: '/',
+		endpoint: '',
 	},
 	get: {
 		method:   'GET',
@@ -35,7 +32,7 @@ const availableActions = {
 const routeOptionsSchema = Joi.object().keys({
 	json:       Joi.boolean().optional().default(false),
 	fileUpload: Joi.boolean().optional().default(false),
-	sentryDSN:  Joi.string().optional().default(null),
+	JWT_SECRET: Joi.string().optional().default(null),
 	// before:     Joi.func().optional(),
 });
 
@@ -51,7 +48,7 @@ class Route {
 	 */
 	constructor(name, routes, options = {}) {
 		this._name = name;
-		this._router = express.Router();
+		this._router = new Router();
 
 		this._init(options);
 
@@ -59,7 +56,7 @@ class Route {
 		// const customRoutes = lodashOmit(routes, Object.keys(availableActions));
 
 		Object.keys(defaultRoutes).forEach((route) => {
-			this._createRoute(route, availableActions[route], defaultRoutes[route].validation || {});
+			this._createRoute(route, availableActions[route], defaultRoutes[route].validation || {}, defaultRoutes[route].jwt || false);
 		});
 	}
 
@@ -79,40 +76,11 @@ class Route {
 
 
 	/**
-	 * Initialize body parser middleware.
-	 */
-	_initBodyParser() {
-		if (this.options.json) {
-			this._router.use(bodyParser.urlencoded({ extended: false }));
-			this._router.use(bodyParser.json());
-		}
-	}
-
-	/**
 	 * Initialize file upload middleware.
 	 */
 	_initFileUpload() {
 		if (this.options.fileUpload) {
 			this._router.use(fileUpload);
-		}
-	}
-
-	/**
-	 * Initialize Sentry middleware.
-	 */
-	_initSentry() {
-		if (this.options.sentryDSN) {
-			Raven.config(this.options.sentryDSN).install();
-			this._router.use(Raven.requestHandler());
-		}
-	}
-
-	/**
-	 * Initialize Sentry error handler middleware.
-	 */
-	_initSentryErrorHandler() {
-		if (this.options.sentryDSN) {
-			this._router.use(Raven.errorHandler());
 		}
 	}
 
@@ -128,25 +96,7 @@ class Route {
 
 		this.options = value;
 
-		this._initSentry();
-		this._initBodyParser();
-		this._initFileUpload();
-		this._initSentryErrorHandler();
-	}
-
-	/**
-	 * Return a default endpoint for default actions.
-	 * @param {String} action - A valid action (create, index, get, update, delete)
-	 * @return {String} The default endpoint.
-	 */
-	_getDefaultEndpoint(action) {
-		let endpoint = '/';
-
-		if (action === 'update' || action === 'get' || action === 'delete') {
-			endpoint += ':id';
-		}
-
-		return endpoint;
+		// this._initFileUpload();
 	}
 
 	/**
@@ -154,13 +104,24 @@ class Route {
 	 * @param {String} action - The action (create, index, get, update, delete)
 	 * @param {Object} { endpoint, method } - An Obejct with the endpoint and the associated method
 	 * @param {Object} bodySchema - The joi schema associated with the route
+	 * @param {Boolean} isProtected - True if the route is protected
 	 */
-	_createRoute(action, { endpoint, method }, bodySchema = {}) {
-		this._router[method.toLowerCase()](
-			endpoint,
-			expressJoiMiddleware(bodySchema),
-			asyncMiddleware((req, res, next) => this[action](req, res, next)),
-		);
+	_createRoute(action, { endpoint, method }, bodySchema = {}, isProtected = false) {
+		const args = [`${this.name}${endpoint}`];
+
+		if (isProtected) {
+			if (this.options.JWT_SECRET === null) {
+				throw new Error(`route-invalid-jwt-secret: ${this.name}${endpoint} ${action}`);
+			}
+			args.push(jwt({ secret: this.options.JWT_SECRET }));
+		}
+		if (this.options.json) {
+			args.push(koaBody());
+		}
+		args.push(validate(bodySchema));
+		args.push((ctx, next) => this[action](ctx, next));
+
+		this._router[method.toLowerCase()](...args);
 	}
 }
 

@@ -1,11 +1,21 @@
-const express = require('express');
+const Koa = require('koa');
+const cors = require('@koa/cors');
+const morgan = require('koa-morgan');
+
+const { SevenBoom } = require('graphql-apollo-errors');
 const Joi = require('joi');
-const cors = require('cors');
+const defaultLogger = require('winston-lludol');
+
+const ddog = require('koa-datadog-middleware');
+const Raven = require('raven');
 
 const schema = Joi.object().keys({
-	port:        Joi.number().integer().min(0).max(65535).optional().default(3000),
-	initMethod:  Joi.func().optional().default(() => Promise.resolve()),
-	corsOptions: Joi.object().optional().default({}),
+	port:          Joi.number().integer().min(0).max(65535).optional().default(3000),
+	initMethod:    Joi.func().optional().default(() => Promise.resolve()),
+	corsOptions:   Joi.object().optional().default({}),
+	logger:        Joi.object().optional().default(defaultLogger),
+	datadogConfig: Joi.object().optional().default({}),
+	sentryDSN:     Joi.string().optional().default(null),
 });
 
 /**
@@ -23,8 +33,79 @@ class MicroService {
 		}
 
 		this.options = value;
-		this.app = express();
+
+		global.logger = this.options.logger;
+
+		this.app = new Koa();
 		this.app.use(cors(this.options.corsOptions));
+		this.app.use(morgan('tiny', {
+			stream: {
+				write: (message) => {
+					logger.info(message);
+				},
+			},
+		}));
+
+		this._initSentry();
+		this._initDatadog();
+		this._initErrorHandler();
+	}
+
+	/**
+	 * Initialize Sentry.
+	 */
+	_initSentry() {
+		if (this.options.sentryDSN) {
+			Raven.config(this.options.sentryDSN).install();
+		}
+	}
+
+	/**
+	 * Initialize the error middleware.
+	 */
+	_initErrorHandler() {
+		this.app.use(async (ctx, next) => {
+			try {
+				await next();
+
+				if (ctx.status === 404) {
+					ctx.body = SevenBoom.notFound('Page not found', ctx.request.path, 'not-found');
+				}
+			} catch (error) {
+				if (error.isBoom) {
+					ctx.status = error.output.statusCode;
+					ctx.body = error;
+				} else if (error.status === 400) {
+					ctx.status = 400;
+					ctx.body = SevenBoom.badRequest(error.message, {}, 'validation-error');
+				} else if (error.name === 'UnauthorizedError') {
+					ctx.status = 401;
+					ctx.body = SevenBoom.unauthorized(error.message, {}, error.name);
+				} else {
+					ctx.status = 500;
+					ctx.body = SevenBoom.badImplementation(error.message, error.stack, error.name);
+					ctx.app.emit('error', error, ctx);
+				}
+			}
+		});
+
+		this.app.on('error', (error) => {
+			logger.error(error.stack ? error.stack : error);
+			if (this.options.sentryDSN) {
+				Raven.captureException(error, (e, eventId) => {
+					logger.info(`Reported error ${eventId}`);
+				});
+			}
+		});
+	}
+
+	/**
+	 * Initiliaze Datadog middleware.
+	 */
+	_initDatadog() {
+		if (this.options.datadogConfig) {
+			this.app.use(ddog(this.options.datadogConfig));
+		}
 	}
 
 	/**
@@ -40,7 +121,8 @@ class MicroService {
 	 * @param {Route} route - An instance of Route.
 	 */
 	addRoute(route) {
-		this.app.use(route.name, route.router);
+		this.app.use(route.router.routes());
+		this.app.use(route.router.allowedMethods());
 	}
 
 	/**
@@ -52,9 +134,8 @@ class MicroService {
 		await this._init();
 
 		return new Promise((resolve) => {
-			this.app.listen(this.options.port, () => {
-				resolve();
-			});
+			this.app.listen(this.options.port);
+			resolve();
 		});
 	}
 }

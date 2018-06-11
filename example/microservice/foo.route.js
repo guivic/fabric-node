@@ -48,8 +48,8 @@ class Foo extends Route {
 		this.foos = [];
 	}
 
-	create(req, res) {
-		const name = req.validated.body.name;
+	create(ctx, next) {
+		const { name } = ctx.request.body;
 
 		const entry = {
 			id: this.nextId,
@@ -58,55 +58,64 @@ class Foo extends Route {
 
 		this.foos.push(entry);
 
-		res.json(entry);
+		ctx.body = entry;
+		return next();
 	}
 
-	index(req, res) {
-		res.json(this.foos);
+	index(ctx, next) {
+		ctx.body = this.foos;
+		return next();
 	}
 
-	get(req, res) {
-		const id = req.validated.params.id;
+	get(ctx, next) {
+		const id = Number.parseInt(ctx.params.id, 10);
 
 		const entry = this.foos.find((e) => e.id === id);
 		if (!entry) {
-			res.status(404);
+			ctx.status = 404;
+			return next();
 		}
 
-		res.json(entry);
+		ctx.body = entry;
+		return next();
 	}
 
-	update(req, res) {
-		const id = req.validated.params.id;
-		const name = req.validated.body.name;
+	update(ctx, next) {
+		const id = Number.parseInt(ctx.params.id, 10);
+		const { name } = ctx.request.body;
 
 		const entryIndex = this.foos.findIndex((e) => e.id === id);
 		if (entryIndex === -1) {
-			res.status(404);
+			ctx.status = 404;
+			return next();
 		}
 
 		this.foos[entryIndex].name = name;
 
-		res.json(this.foos[entryIndex]);
+		ctx.body = this.foos[entryIndex];
+		return next();
 	}
 
-	delete(req, res) {
-		const id = req.validated.params.id;
+	delete(ctx, next) {
+		const id = Number.parseInt(ctx.params.id, 10);
 
 		const entryIndex = this.foos.findIndex((e) => e._id === id);
 		if (entryIndex === -1) {
-			res.status(404);
+			ctx.status = 404;
+			return next();
 		}
 
 		this.foos.splice(entryIndex, 1);
 
-		res.json({});
+		ctx.body = {};
+		return next();
 	}
 
-	about(req, res, next) {
-		res.json({
+	about(ctx, next) {
+		ctx.body = {
 			message: 'Custom route ABOUT',
-		});
+		};
+		return next();
 	}
 }
 

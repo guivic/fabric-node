@@ -4,7 +4,7 @@ const { MicroService } = require('../../index');
 const { name } = require('./package.json');
 const Foo = require('./foo.route');
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 (async function () {
 	try {
@@ -21,7 +21,6 @@ const PORT = process.env.PORT || 8080;
 		await microService.start();
 		logger.info(`[${name}] listening on port ${PORT}`);
 	} catch (error) {
-		console.log(error);
 		logger.error(error);
 	}
 }());

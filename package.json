@@ -43,13 +43,21 @@
     "express": "^4.16.2",
     "express-fileupload": "^0.4.0",
     "express-joi-middleware": "^1.0.0",
+    "graphql-apollo-errors": "^2.0.3",
     "joi": "^13.1.1",
     "koa": "^2.5.0",
+    "koa-body": "^4.0.1",
     "koa-bodyparser": "^4.2.0",
+    "koa-datadog-middleware": "^1.2.0",
+    "koa-jwt": "^3.3.2",
+    "koa-morgan": "^1.0.1",
+    "koa-router": "^7.4.0",
+    "koa2-validation": "^0.1.0",
     "lodash.omit": "^4.5.0",
     "lodash.pick": "^4.4.0",
     "nodemailer": "^4.4.2",
     "nodemailer-sendgrid": "^1.0.2",
-    "raven": "^2.4.0"
+    "raven": "^2.4.0",
+    "winston-lludol": "^0.0.5"
   }
 }
