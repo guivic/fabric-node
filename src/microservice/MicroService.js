@@ -15,7 +15,7 @@ const schema = Joi.object().keys({
 	corsOptions:   Joi.object().optional().default({}),
 	logger:        Joi.object().optional().default(defaultLogger),
 	datadogConfig: Joi.object().optional().default({}),
-	sentryDSN:     Joi.string().optional().default(null),
+	sentryDSN:     Joi.string().allow(null).optional().default(null),
 });
 
 /**
