@@ -29,10 +29,15 @@ class MicroService {
 	constructor(options) {
 		const { value, error } = Joi.validate(options, schema);
 		if (error) {
-			throw error;
+			throw new Error('microservice-invalid-options');
 		}
 
 		this.options = value;
+
+		this._initSentry();
+
+		process.on('unhandledRejection', (e) => this.errorHandler('unhandledRejection', e));
+		process.on('uncaughtException', (e) => this.errorHandler('uncaughtException', e));
 
 		global.logger = this.options.logger;
 
@@ -46,9 +51,30 @@ class MicroService {
 			},
 		}));
 
-		this._initSentry();
 		this._initDatadog();
 		this._initErrorHandler();
+	}
+
+	/**
+	 * Error handler that send errors to Sentry and display them.
+	 * @param {String} type - The error type
+	 * @param {Object} error - The error Object
+	 */
+	errorHandler(type, error) {
+		logger.error(error);
+
+		if (this.options.sentryDSN) {
+			Raven.captureException(
+				error,
+				{
+					tags: {
+						type,
+					},
+				},
+			);
+		}
+
+		process.exit(1);
 	}
 
 	/**
