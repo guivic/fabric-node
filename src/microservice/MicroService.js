@@ -70,11 +70,18 @@ class MicroService {
 					tags: {
 						type,
 					},
+					level: 'fatal',
+				},
+				(sendError) => {
+					if (sendError) {
+						logger.error('Failed to send captured exception to Sentry');
+					}
+					process.exit(1);
 				},
 			);
+		} else {
+			process.exit(1);
 		}
-
-		process.exit(1);
 	}
 
 	/**
