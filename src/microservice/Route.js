@@ -2,9 +2,9 @@ const Router = require('koa-router');
 const koaBody = require('koa-body');
 const validate = require('koa2-validation');
 const Joi = require('joi');
-const fileUpload = require('express-fileupload');
-const lodashPick = require('lodash.pick');
 const jwt = require('koa-jwt');
+
+const methodsEnum = ['POST', 'GET', 'PUT', 'DELETE'];
 
 const availableActions = {
 	create: {
@@ -31,9 +31,46 @@ const availableActions = {
 
 const routeOptionsSchema = Joi.object().keys({
 	json:       Joi.boolean().optional().default(false),
-	fileUpload: Joi.boolean().optional().default(false),
 	JWT_SECRET: Joi.string().optional().default(null),
 	// before:     Joi.func().optional(),
+});
+
+const routesValidationSchema = Joi.object().keys({
+	body:   Joi.object().optional(),
+	params: Joi.object().optional(),
+	query:  Joi.object().optional(),
+}).optional();
+
+/**
+ * Return the joi schema for the action.
+ * @param {String} action - An action from availaible actions or a custom one.
+ * @return {Object} The joi schema.
+ */
+function generateRoutesDefinitionSchema(action) {
+	const keys = {
+		validation:  routesValidationSchema,
+		isProtected: Joi.boolean().optional(),
+	};
+
+	if (availableActions.hasOwnProperty(action)) {
+		keys.method = Joi.string().optional().default(availableActions[action].method);
+		keys.endpoint = Joi.string().valid(methodsEnum)
+			.optional().default(availableActions[action].endpoint);
+	} else {
+		keys.method = Joi.string().valid(methodsEnum).required();
+		keys.endpoint = Joi.string().optional();
+	}
+
+	return Joi.object().keys(keys).optional();
+}
+
+const routesSchema = Joi.object().keys({
+	create:  generateRoutesDefinitionSchema('create'),
+	index:   generateRoutesDefinitionSchema('index'),
+	get:     generateRoutesDefinitionSchema('get'),
+	update:  generateRoutesDefinitionSchema('update'),
+	delete:  generateRoutesDefinitionSchema('delete'),
+	customs: Joi.object().pattern(/^/, generateRoutesDefinitionSchema('custom')),
 });
 
 /**
@@ -52,11 +89,19 @@ class Route {
 
 		this._init(options);
 
-		const defaultRoutes = lodashPick(routes, Object.keys(availableActions));
-		// const customRoutes = lodashOmit(routes, Object.keys(availableActions));
+		const { value: routesValidated, error } = Joi.validate(routes, routesSchema);
+		if (error) {
+			throw error;
+		}
 
-		Object.keys(defaultRoutes).forEach((route) => {
-			this._createRoute(route, availableActions[route], defaultRoutes[route].validation || {}, defaultRoutes[route].jwt || false);
+		Object.keys(routesValidated).forEach((route) => {
+			if (route === 'customs') {
+				Object.keys(routesValidated[route]).forEach((customRoute) => {
+					this._createRoute(customRoute, routesValidated.customs[customRoute]);
+				});
+			} else {
+				this._createRoute(route, routesValidated[route]);
+			}
 		});
 	}
 
@@ -76,15 +121,6 @@ class Route {
 
 
 	/**
-	 * Initialize file upload middleware.
-	 */
-	_initFileUpload() {
-		if (this.options.fileUpload) {
-			this._router.use(fileUpload);
-		}
-	}
-
-	/**
 	 * Parse options Object and use middleware.
 	 * @param {Object} options - The route options.
 	 */
@@ -95,18 +131,14 @@ class Route {
 		}
 
 		this.options = value;
-
-		// this._initFileUpload();
 	}
 
 	/**
 	 * Create a route with the router instance.
 	 * @param {String} action - The action (create, index, get, update, delete)
-	 * @param {Object} { endpoint, method } - An Obejct with the endpoint and the associated method
-	 * @param {Object} bodySchema - The joi schema associated with the route
-	 * @param {Boolean} isProtected - True if the route is protected
+	 * @param {Object} { endpoint, method, validation, jwt } - An Object that defines a route
 	 */
-	_createRoute(action, { endpoint, method }, bodySchema = {}, isProtected = false) {
+	_createRoute(action, { endpoint, method, validation = {}, isProtected = false }) {
 		const args = [`${this.name}${endpoint}`];
 
 		if (isProtected) {
@@ -118,7 +150,7 @@ class Route {
 		if (this.options.json) {
 			args.push(koaBody());
 		}
-		args.push(validate(bodySchema));
+		args.push(validate(validation));
 		args.push((ctx, next) => this[action](ctx, next));
 
 		this._router[method.toLowerCase()](...args);
