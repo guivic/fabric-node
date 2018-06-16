@@ -61,7 +61,7 @@ class MicroService {
 	 * @param {Object} error - The error Object
 	 */
 	errorHandler(type, error) {
-		logger.error(error);
+		logger.error(error.stack ? error.stack : error);
 
 		if (this.options.sentryDSN) {
 			Raven.captureException(
