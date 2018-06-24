@@ -96,7 +96,7 @@ class Gateway {
 					if (nonBoomError.isJoi) {
 						return SevenBoom.badRequest(nonBoomError.message, {}, 'validation-error');
 					}
-					return nonBoomError;
+					return SevenBoom.badImplementation(nonBoomError.message, nonBoomError.stack, nonBoomError.name);
 				},
 			}),
 		}));
