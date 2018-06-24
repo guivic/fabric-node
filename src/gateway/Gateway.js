@@ -1,8 +1,12 @@
 const Koa = require('koa');
 const cors = require('@koa/cors');
 const morgan = require('koa-morgan');
+const koaBody = require('koa-bodyparser');
+const KoaRouter = require('koa-router');
+const { graphqlKoa, graphiqlKoa } = require('apollo-server-koa');
+const { makeExecutableSchema } = require('graphql-tools');
 
-const { SevenBoom } = require('graphql-apollo-errors');
+const { formatErrorGenerator, SevenBoom } = require('graphql-apollo-errors');
 const Joi = require('joi');
 const defaultLogger = require('winston-lludol');
 
@@ -11,6 +15,8 @@ const Raven = require('raven');
 
 const schema = Joi.object().keys({
 	port:          Joi.number().integer().min(0).max(65535).optional().default(3000),
+	graphqlSchema: Joi.object().optional().default({}),
+
 	initMethod:    Joi.func().optional().default(() => Promise.resolve()),
 	corsOptions:   Joi.object().optional().default({}),
 	logger:        Joi.object().optional().default(defaultLogger),
@@ -19,17 +25,17 @@ const schema = Joi.object().keys({
 });
 
 /**
- * Represent a microservice (a REST API).
+ * Represent a GraphQL gateway.
  */
-class MicroService {
+class Gateway {
 	/**
 	 * Check if the options Object is valid.
-	 * @param {Object} options - The microservice options.
+	 * @param {Object} options - The gateway options.
 	 */
 	constructor(options) {
 		const { value, error } = Joi.validate(options, schema);
 		if (error) {
-			throw new Error('microservice-invalid-options');
+			throw new Error('gateway-invalid-options');
 		}
 
 		this.options = value;
@@ -50,9 +56,60 @@ class MicroService {
 				},
 			},
 		}));
+		this.app.use(koaBody());
 
 		this._initDatadog();
 		this._initErrorHandler();
+
+		const router = new KoaRouter();
+
+	 	const gschema = makeExecutableSchema({
+			typeDefs:  this.options.graphqlSchema.typeDefs,
+			resolvers: this.options.graphqlSchema.resolvers,
+
+			allowUndefinedInResolve: true,
+		});
+
+		router.post('/graphql', graphqlKoa({
+			schema:      gschema,
+			formatError: formatErrorGenerator({
+				logger,
+				showLocations:     false,
+				showPath:          true,
+				hideSensitiveData: true,
+				hooks:             {
+					onProcessedError: (processedError) => {
+						if (processedError.output) {
+							logger.error(processedError.output);
+						}
+
+						logger.error(processedError.stack ? processedError.stack : processedError);
+
+						if (this.options.sentryDSN) {
+							Raven.captureException(processedError, (e, eventId) => {
+								logger.info(`Reported error ${eventId}`);
+							});
+						}
+					},
+				},
+				nonBoomTransformer: (nonBoomError) => {
+					if (nonBoomError.isJoi) {
+						return SevenBoom.badRequest(nonBoomError.message, {}, 'validation-error');
+					}
+					return nonBoomError;
+				},
+			}),
+		}));
+		router.get('/graphql', graphqlKoa({ schema: gschema }));
+		router.get(
+			'/graphiql',
+			graphiqlKoa({
+				endpointURL: '/graphql',
+			}),
+		);
+
+		this.app.use(router.routes());
+		this.app.use(router.allowedMethods());
 	}
 
 	/**
@@ -105,20 +162,9 @@ class MicroService {
 					ctx.body = SevenBoom.notFound('Page not found', ctx.request.path, 'not-found');
 				}
 			} catch (error) {
-				if (error.isBoom) {
-					ctx.status = error.output.statusCode;
-					ctx.body = error;
-				} else if (error.status === 400) {
-					ctx.status = 400;
-					ctx.body = SevenBoom.badRequest(error.message, {}, 'validation-error');
-				} else if (error.name === 'UnauthorizedError') {
-					ctx.status = 401;
-					ctx.body = SevenBoom.unauthorized(error.message, {}, error.name);
-				} else {
-					ctx.status = 500;
-					ctx.body = SevenBoom.badImplementation(error.message, error.stack, error.name);
-					ctx.app.emit('error', error, ctx);
-				}
+				ctx.status = 500;
+				ctx.body = SevenBoom.badImplementation(error.message, error.stack, error.name);
+				ctx.app.emit('error', error, ctx);
 			}
 		});
 
@@ -142,7 +188,7 @@ class MicroService {
 	}
 
 	/**
-	 * Run the initMethod of the microservice.
+	 * Run the initMethod of the gateway.
 	 * @return {Promise} - An empty Promise.
 	 */
 	_init() {
@@ -150,16 +196,7 @@ class MicroService {
 	}
 
 	/**
-	 * Add a route to the microservice.
-	 * @param {Route} route - An instance of Route.
-	 */
-	addRoute(route) {
-		this.app.use(route.router.routes());
-		this.app.use(route.router.allowedMethods());
-	}
-
-	/**
-	 * Launch the microservice.
+	 * Launch the gateway.
 	 * @param {Object} app - The Koa instance.
 	 * @return {Promise} - An empty Promise.
 	 */
@@ -173,4 +210,4 @@ class MicroService {
 	}
 }
 
-module.exports = MicroService;
+module.exports = Gateway;
