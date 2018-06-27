@@ -3,6 +3,7 @@ const cors = require('@koa/cors');
 const morgan = require('koa-morgan');
 const koaBody = require('koa-bodyparser');
 const KoaRouter = require('koa-router');
+const koaJwt = require('koa-jwt');
 const { graphqlKoa, graphiqlKoa } = require('apollo-server-koa');
 const { makeExecutableSchema } = require('graphql-tools');
 
@@ -16,6 +17,7 @@ const Raven = require('raven');
 const schema = Joi.object().keys({
 	port:          Joi.number().integer().min(0).max(65535).optional().default(3000),
 	graphqlSchema: Joi.object().optional().default({}),
+	JWT_SECRET:    Joi.string().optional().default(null),
 
 	initMethod:    Joi.func().optional().default(() => Promise.resolve()),
 	corsOptions:   Joi.object().optional().default({}),
@@ -63,15 +65,22 @@ class Gateway {
 
 		const router = new KoaRouter();
 
-	 	const gschema = makeExecutableSchema({
+		const gschema = makeExecutableSchema({
 			typeDefs:  this.options.graphqlSchema.typeDefs,
 			resolvers: this.options.graphqlSchema.resolvers,
 
 			allowUndefinedInResolve: true,
 		});
 
-		router.post('/graphql', graphqlKoa({
-			schema:      gschema,
+		if (this.options.JWT_SECRET) {
+			router.post('/graphql', koaJwt({ secret: this.options.JWT_SECRET, passthrough: true }));
+		}
+
+		router.post('/graphql', graphqlKoa((ctx) => ({
+			schema:  gschema,
+			context: {
+				user: ctx.state && ctx.state.user ? ctx.state.user : null,
+			},
 			formatError: formatErrorGenerator({
 				logger,
 				showLocations:     false,
@@ -99,7 +108,7 @@ class Gateway {
 					return SevenBoom.badImplementation(nonBoomError.message, nonBoomError.stack, nonBoomError.name);
 				},
 			}),
-		}));
+		})));
 		router.get('/graphql', graphqlKoa({ schema: gschema }));
 		router.get(
 			'/graphiql',
