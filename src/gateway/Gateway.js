@@ -18,6 +18,7 @@ const schema = Joi.object().keys({
 	port:          Joi.number().integer().min(0).max(65535).optional().default(3000),
 	graphqlSchema: Joi.object().optional().default({}),
 	JWT_SECRET:    Joi.string().optional().default(null),
+	production:    Joi.boolean().optional().default(false),
 
 	initMethod:    Joi.func().optional().default(() => Promise.resolve()),
 	corsOptions:   Joi.object().optional().default({}),
@@ -68,8 +69,6 @@ class Gateway {
 		const gschema = makeExecutableSchema({
 			typeDefs:  this.options.graphqlSchema.typeDefs,
 			resolvers: this.options.graphqlSchema.resolvers,
-
-			allowUndefinedInResolve: true,
 		});
 
 		if (this.options.JWT_SECRET) {
@@ -85,7 +84,7 @@ class Gateway {
 				logger,
 				showLocations:     false,
 				showPath:          true,
-				hideSensitiveData: true,
+				hideSensitiveData: this.options.production,
 				hooks:             {
 					onProcessedError: (processedError) => {
 						if (processedError.output) {
