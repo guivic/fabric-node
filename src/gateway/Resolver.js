@@ -9,6 +9,7 @@ class Resolver {
 	 * @param {Object} resolvers - The resolver config.
 	 */
 	constructor(resolvers) {
+		this.type = resolvers.type || {};
 		this.query = resolvers.query || {};
 		this.mutation = resolvers.mutation || {};
 	}
@@ -68,6 +69,14 @@ class Resolver {
 			mutations[mutation] = this._wrapper(mutation, this.mutation[mutation]);
 		});
 		return mutations;
+	}
+
+	/**
+	 * Return type's resolvers.
+	 * @returns {Object} An Object thant contains type and its resolver's fields.
+	 */
+	getType() {
+		return this.type;
 	}
 }
 
