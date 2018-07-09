@@ -4,7 +4,11 @@ const morgan = require('koa-morgan');
 const koaBody = require('koa-bodyparser');
 const KoaRouter = require('koa-router');
 const koaJwt = require('koa-jwt');
+const koaStatic = require('koa-static');
+const koaMount = require('koa-mount');
 const { graphqlKoa, graphiqlKoa } = require('apollo-server-koa');
+const { apolloUploadKoa } = require('apollo-upload-server');
+
 const { makeExecutableSchema } = require('graphql-tools');
 
 const { formatErrorGenerator, SevenBoom } = require('graphql-apollo-errors');
@@ -17,8 +21,13 @@ const Raven = require('raven');
 const schema = Joi.object().keys({
 	port:          Joi.number().integer().min(0).max(65535).optional().default(3000),
 	graphqlSchema: Joi.object().optional().default({}),
+	graphqlUpload: Joi.boolean().optional().default(false),
 	JWT_SECRET:    Joi.string().optional().default(null),
 	production:    Joi.boolean().optional().default(false),
+	staticPaths:   Joi.array().items(Joi.object().keys({
+		url:  Joi.string().required(),
+		path: Joi.string().required(),
+	})).default([]),
 
 	initMethod:    Joi.func().optional().default(() => Promise.resolve()),
 	corsOptions:   Joi.object().optional().default({}),
@@ -61,6 +70,10 @@ class Gateway {
 		}));
 		this.app.use(koaBody());
 
+		this.options.staticPaths.forEach((staticPath) => {
+			this.app.use(koaMount(staticPath.url, koaStatic(staticPath.path)));
+		});
+
 		this._initDatadog();
 		this._initErrorHandler();
 
@@ -75,7 +88,7 @@ class Gateway {
 			router.post('/graphql', koaJwt({ secret: this.options.JWT_SECRET, passthrough: true }));
 		}
 
-		router.post('/graphql', graphqlKoa((ctx) => ({
+		router.post('/graphql', this.options.graphqlUpload ? apolloUploadKoa() : (ctx, next) => next(), graphqlKoa((ctx) => ({
 			schema:  gschema,
 			context: {
 				user: ctx.state && ctx.state.user ? ctx.state.user : null,
