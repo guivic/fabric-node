@@ -1,4 +1,5 @@
 const FSStorageProvider = require('./fs.storage.js');
+const CloudinaryStorageProvider = require('./cloudinary.storage.js');
 
 /**
  * Singleotn that handle multiple storage provider.
@@ -9,7 +10,8 @@ class Storage {
 	 */
 	constructor() {
 		this._providers = {
-			FS: FSStorageProvider,
+			FS:         FSStorageProvider,
+			CLOUDINARY: CloudinaryStorageProvider,
 		};
 	}
 
@@ -34,13 +36,17 @@ class Storage {
 	 * @return {Object} An Object with the uploaded file informations
 	 */
 	async upload(stream, filename, scope) {
-		const url = await this.provider.upload(stream, filename, scope);
-
-		return {
-			provider: this.provider.name,
-			url,
-			filename,
-		};
+		try {
+			const url = await this.provider.upload(stream, filename, scope);
+			return {
+				provider: this.provider.name,
+				url,
+				filename,
+			};
+		} catch (error) {
+			logger.error(error);
+			return null;
+		}
 	}
 }
 

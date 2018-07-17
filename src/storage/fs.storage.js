@@ -13,7 +13,7 @@ const schema = Joi.object().keys({
  */
 class FsStorage {
 	/**
-	 * Initialize the name of the provider.
+	 * Check the options.
 	 * @param {Object} options - The config for FsStorage.
 	 */
 	constructor(options) {
