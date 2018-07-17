@@ -1,6 +1,6 @@
 {
   "name": "@guivic/fabric-node",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "node.js helpers to create quickly micro services and API",
   "main": "index.js",
   "scripts": {
