@@ -1,5 +1,6 @@
 const FSStorageProvider = require('./fs.storage.js');
 const CloudinaryStorageProvider = require('./cloudinary.storage.js');
+const GoogleCloudStorageProvider = require('./googleCloud.storage');
 
 /**
  * Singleotn that handle multiple storage provider.
@@ -10,8 +11,9 @@ class Storage {
 	 */
 	constructor() {
 		this._providers = {
-			FS:         FSStorageProvider,
-			CLOUDINARY: CloudinaryStorageProvider,
+			FS:          FSStorageProvider,
+			CLOUDINARY:  CloudinaryStorageProvider,
+			GOOGLECLOUD: GoogleCloudStorageProvider,
 		};
 	}
 
