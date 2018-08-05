@@ -50,6 +50,16 @@ class Storage {
 			return null;
 		}
 	}
+
+	/**
+	 * Download the file
+	 * @param {String} filename - The name of the file.
+	 * @param {String} scope - The scope to know where to store the file.
+	 * @return {Stream} The stream of the file.
+	 */
+	download(filename, scope) {
+		return this.provider.download(filename, scope);
+	}
 }
 
 module.exports = new Storage();

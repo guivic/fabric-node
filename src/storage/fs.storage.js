@@ -43,6 +43,16 @@ class FsStorage {
 	}
 
 	/**
+	 * Return the path where the file is stored.
+	 * @param {String} filename - The name of the file
+	 * @param {String} scope - The scope to create a folder
+	 * @return {String} The path where the file is stored.
+	 */
+	_getPath(filename, scope) {
+		return path.join(this.options.dist, scope, filename);
+	}
+
+	/**
 	 * Store a file on the disk.
 	 * @param {Object} data - The file data (Stream, Buffer, String, etc)
 	 * @param {String} filename - The name of the file
@@ -64,6 +74,18 @@ class FsStorage {
 		}
 		await fs.outputFile(path.join(this.options.dist, scope, filename), data);
 		return Promise.resolve(this._getUrl(filename, scope));
+	}
+
+	/**
+	 * Return the readdable stream of the file.
+	 * @param {String} filename - The name of the file
+	 * @param {String} scope - The scope to create a folder
+	 * @return {Stream} The stream of the file.
+	 */
+	async download(filename, scope = '') {
+		const p = this._getPath(filename, scope);
+		await fs.ensureFile(p);
+		return fs.createReadStream(p);
 	}
 }
 

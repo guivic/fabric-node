@@ -76,6 +76,17 @@ class GoogleCloudStorage {
 				.on('error', (error) => reject(error));
 		});
 	}
+
+	/**
+	 * Return the readdable stream of the file.
+	 * @param {String} filename - The name of the file
+	 * @param {String} scope - The scope to create a folder
+	 * @return {Stream} The stream of the file.
+	 */
+	download(filename, scope = '') {
+		const remoteFile = this._bucket.file(this._getDestPath(filename, scope));
+		return remoteFile.createReadStream();
+	}
 }
 
 module.exports = GoogleCloudStorage;
