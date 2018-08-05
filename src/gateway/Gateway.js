@@ -217,6 +217,15 @@ class Gateway {
 	}
 
 	/**
+	 * Add a route to the microservice.
+	 * @param {Route} route - An instance of Route.
+	 */
+	addRoute(route) {
+		this.app.use(route.router.routes());
+		this.app.use(route.router.allowedMethods());
+	}
+
+	/**
 	 * Launch the gateway.
 	 * @param {Object} app - The Koa instance.
 	 * @return {Promise} - An empty Promise.
