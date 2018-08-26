@@ -61,7 +61,7 @@ class FsStorage {
 	 */
 	async upload(data, filename, scope = '') {
 		await fs.ensureDir(path.join(this.options.dist, scope));
-		if (data.constructor && data.constructor.name === 'FileStream') {
+		if (data.constructor && (data.constructor.name === 'FileStream' || data.constructor.name === 'Duplex')) {
 			const writeStream = fs.createWriteStream(path.join(this.options.dist, scope, filename));
 			return new Promise((resolve, reject) => {
 				data
