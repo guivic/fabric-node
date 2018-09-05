@@ -60,7 +60,13 @@ class Gateway {
 		global.logger = this.options.logger;
 
 		this.app = new Koa();
-		this.app.use(cors(this.options.corsOptions));
+
+		if (this.options.corsOptions && Object.keys(this.options.corsOptions).length > 0) {
+			this.app.use(cors(this.options.corsOptions));
+		} else {
+			this.app.use(cors());
+		}
+
 		this.app.use(morgan('tiny', {
 			stream: {
 				write: (message) => {
