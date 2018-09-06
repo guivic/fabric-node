@@ -1,5 +1,5 @@
 const Koa = require('koa');
-const cors = require('@koa/cors');
+const cors = require('koa2-cors');
 const morgan = require('koa-morgan');
 
 const { SevenBoom } = require('graphql-apollo-errors');
@@ -42,7 +42,13 @@ class MicroService {
 		global.logger = this.options.logger;
 
 		this.app = new Koa();
-		this.app.use(cors(this.options.corsOptions));
+
+		if (this.options.corsOptions && Object.keys(this.options.corsOptions).length > 0) {
+			this.app.use(cors(this.options.corsOptions));
+		} else {
+			this.app.use(cors());
+		}
+
 		this.app.use(morgan('tiny', {
 			stream: {
 				write: (message) => {
