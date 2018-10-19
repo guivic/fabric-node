@@ -66,6 +66,7 @@
     "lodash.omit": "^4.5.0",
     "lodash.pick": "^4.4.0",
     "nodemailer": "^4.4.2",
+    "nodemailer-mandrill-transport": "^1.2.0",
     "nodemailer-sendgrid": "^1.0.2",
     "passport": "^0.4.0",
     "passport-http-bearer": "^1.0.1",
