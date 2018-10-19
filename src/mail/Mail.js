@@ -1,5 +1,6 @@
 const FakeMail = require('./FakeMailProvider');
 const Sendgrid = require('./SendGridProvider');
+const Mandrill = require('./MandrillProvider');
 
 /**
  * Mail is a singleton that can send email
@@ -12,6 +13,7 @@ class Mail {
 		this.providers = {
 			FAKE_MAIL: FakeMail,
 			SENDGRID:  Sendgrid,
+			MANDRILL:  Mandrill,
 		};
 	}
 
