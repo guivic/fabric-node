@@ -1,17 +1,28 @@
 const Joi = require('joi');
 
+const constructorSchema = Joi.object().keys({
+	type:     Joi.object().optional().default({}),
+	query:    Joi.object().optional().default({}),
+	mutation: Joi.object().optional().default({}),
+});
+
 /**
  * Define a GraphQL resolver with queries and mutations.
  */
 class Resolver {
 	/**
 	 * Store queries and mutations.
-	 * @param {Object} resolvers - The resolver config.
+	 * @param {Object} options - The resolver config.
 	 */
-	constructor(resolvers) {
-		this.type = resolvers.type || {};
-		this.query = resolvers.query || {};
-		this.mutation = resolvers.mutation || {};
+	constructor(options = {}) {
+		const { value, error } = Joi.validate(options, constructorSchema);
+		if (error) {
+			throw new Error(`resolver-invalid-options: ${error.message}`);
+		}
+
+		this.type = value.type;
+		this.query = value.query;
+		this.mutation = value.mutation;
 	}
 
 	/**
@@ -40,6 +51,9 @@ class Resolver {
 	 */
 	_wrapper(name, params) {
 		return async (obj, args, context, info) => {
+			if (!this.hasOwnProperty(name)) {
+				throw new Error(`resolver-method-not-found: ${name}`);
+			}
 			if (params.validation) {
 				args = await this._validate(args, params.validation);
 			}
