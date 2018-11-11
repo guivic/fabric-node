@@ -1,12 +1,22 @@
 {
 	"env": {
-		"node": true
-	},
-	"parserOptions": {
-		"ecmaVersion": 8
+		"node": true,
+		"mocha": true
 	},
 	"globals": {
 		"logger": true
 	},
-	"extends": "eslint-config-lludol"
+	"extends": "eslint-config-lludol",
+	"plugins": [
+		"chai-expect",
+		"mocha"
+	],
+	"overrides": [
+		{
+			"files": "*.test.js",
+			"rules": {
+				"no-unused-expressions": "off"
+			}
+		}
+	]
 }

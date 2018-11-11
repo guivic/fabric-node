@@ -4,8 +4,11 @@
   "description": "node.js helpers to create quickly micro services and API",
   "main": "index.js",
   "scripts": {
+    "cover": "nyc --reporter=html --all npm test",
+    "coveralls": "nyc --reporter=lcovonly mocha && cat ./coverage/lcov.info | coveralls",
+    "test": "mocha test/test.config.js test/*.test.js test/**/*.test.js --exit",
     "lint": "eslint .",
-    "fix-code": "eslint . --fix",
+    "lint:fix": "eslint . --fix",
     "commit": "git-cz"
   },
   "engines": {
@@ -32,9 +35,16 @@
     }
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "commitizen": "^2.9.6",
+    "coveralls": "^3.0.2",
     "eslint": "^4.16.0",
-    "eslint-config-lludol": "^0.1.7"
+    "eslint-config-lludol": "^0.1.7",
+    "eslint-plugin-chai-expect": "^1.1.1",
+    "eslint-plugin-mocha": "^5.2.0",
+    "mocha": "^5.2.0",
+    "nyc": "^13.0.1"
   },
   "dependencies": {
     "@google-cloud/storage": "^1.7.0",
@@ -71,5 +81,12 @@
     "passport-http-bearer": "^1.0.1",
     "raven": "^2.4.0",
     "winston-lludol": "^0.0.5"
+  },
+  "nyc": {
+    "exclude": [
+      "example",
+      "test",
+      "coverage"
+    ]
   }
 }

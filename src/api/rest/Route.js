@@ -73,6 +73,12 @@ const routesSchema = Joi.object().keys({
 	customs: Joi.object().pattern(/^/, generateRoutesDefinitionSchema('custom')),
 });
 
+const constructorSchema = Joi.object().keys({
+	name:    Joi.string().required(),
+	routes:  Joi.object().optional().default({}),
+	options: Joi.object().optional().default({}),
+});
+
 /**
  * Represent a Route with Express.Router();
  */
@@ -83,7 +89,12 @@ class Route {
 	 * @param {Object} routes - An Object that countains routes endpoint and body schemas.
 	 * @param {Object} options - An Object that contains route options.
 	 */
-	constructor(name, routes, options = {}) {
+	constructor(name, routes = {}, options = {}) {
+		const { error: constructorError } = Joi.validate({ name, routes, options }, constructorSchema);
+		if (constructorError) {
+			throw new Error(`route-invalid-options: ${constructorError.message}`);
+		}
+
 		this._name = name;
 		this._router = new Router();
 
@@ -91,7 +102,7 @@ class Route {
 
 		const { value: routesValidated, error } = Joi.validate(routes, routesSchema);
 		if (error) {
-			throw error;
+			throw new Error(`route-invalid-options: ${error.message}`);
 		}
 
 		Object.keys(routesValidated).forEach((route) => {
@@ -113,7 +124,7 @@ class Route {
 	}
 
 	/**
-	 * The express router thant contains the route.
+	 * The express router that will contains all routes.
 	 */
 	get router() {
 		return this._router;
@@ -138,11 +149,13 @@ class Route {
 	 * @param {String} action - The action (create, index, get, update, delete)
 	 * @param {Object} { endpoint, method, validation, jwt } - An Object that defines a route
 	 */
-	_createRoute(action, { endpoint, method, validation = {}, isProtected = false }) {
+	_createRoute(action, {
+		endpoint, method, validation = {}, isProtected = false,
+	}) {
 		const args = [`${this.name}${endpoint}`];
 
 		if (isProtected) {
-			if (this.options.JWT_SECRET === null) {
+			if (!this.options.JWT_SECRET) {
 				throw new Error(`route-invalid-jwt-secret: ${this.name}${endpoint} ${action}`);
 			}
 			args.push(jwt({ secret: this.options.JWT_SECRET }));

@@ -7,6 +7,19 @@
 		{
 			"type": "node",
 			"request": "launch",
+			"name": "Mocha All",
+			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+			"args": [
+				"--colors",
+				"test/test.config.js",
+				"test/**/*.js"
+			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen"
+		},
+		{
+			"type": "node",
+			"request": "launch",
 			"name": "Launch microservice example",
 			"program": "${workspaceFolder}/example/microservice/microservice.example.js",
 			"console": "integratedTerminal"

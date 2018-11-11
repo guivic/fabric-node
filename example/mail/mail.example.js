@@ -18,4 +18,3 @@ const { Mail } = require('../../index');
 		console.log(error);
 	}
 }());
-
