@@ -9,7 +9,7 @@
   "author": "lludol",
   "license": "MIT",
   "dependencies": {
-    "joi": "^13.1.2",
-    "winston-lludol": "^0.0.5"
+    "joi": "^14.0.6",
+    "winston-lludol": "^0.1.0"
   }
 }
