@@ -4,7 +4,6 @@ const Joi = require('joi');
 const defaultLogger = require('winston-lludol');
 
 const API = require('../API');
-const RestAuthorizer = require('./RestAuthorizer');
 
 const schema = Joi.object().keys({
 	port:          Joi.number().integer().min(0).max(65535).optional().default(3000),
@@ -18,10 +17,6 @@ const schema = Joi.object().keys({
 		path: Joi.string().required(),
 	})).default([]),
 	requestLogging: Joi.boolean().optional().default(true),
-	acl:            Joi.object().keys({
-		enforcer:   Joi.func().required(),
-		authorizer: Joi.object().optional().default(new RestAuthorizer()),
-	}).optional().default(null),
 });
 
 /**
@@ -53,8 +48,6 @@ class MicroService extends API {
 
 		this._initCors();
 		this._initRequestLogger();
-
-		this._initAcl();
 
 		this._initDatadog();
 		this._initErrorHandler();
