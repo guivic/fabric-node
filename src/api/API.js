@@ -132,30 +132,6 @@ class API {
 	}
 
 	/**
-	 * Return the ACL middleware funciton.
-	 */
-	get _aclMiddleware() {
-		return async (ctx, next) => {
-			const enforcer = await this.options.acl.enforcer();
-			const { authorizer } = this.options.acl;
-
-			if (!authorizer.checkPermission(ctx, enforcer)) {
-				authorizer.onError(ctx);
-			}
-			await next();
-		};
-	}
-
-	/**
-	 * Initiliaze the ACL with koa-authz and casbin.
-	 */
-	_initAcl() {
-		if (this.options.acl) {
-			this.app.use(this.aclMiddleware);
-		}
-	}
-
-	/**
 	 * Initiliaze the static paths.
 	 */
 	_initStaticPaths() {

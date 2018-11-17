@@ -4,6 +4,8 @@ const validate = require('koa2-validation');
 const Joi = require('joi');
 const jwt = require('koa-jwt');
 
+const RestAuthorizer = require('./RestAuthorizer');
+
 const methodsEnum = ['POST', 'GET', 'PUT', 'DELETE'];
 
 const availableActions = {
@@ -32,6 +34,10 @@ const availableActions = {
 const routeOptionsSchema = Joi.object().keys({
 	json:       Joi.boolean().optional().default(false),
 	JWT_SECRET: Joi.string().optional().default(null),
+	acl:        Joi.object().keys({
+		enforcer:   Joi.func().required(),
+		authorizer: Joi.object().optional().default(new RestAuthorizer()),
+	}).optional().default(null),
 	// before:     Joi.func().optional(),
 });
 
@@ -145,6 +151,22 @@ class Route {
 	}
 
 	/**
+	 * Return the ACL middleware funciton.
+	 */
+	get _aclMiddleware() {
+		return async (ctx, next) => {
+			const enforcer = await this.options.acl.enforcer();
+			const { authorizer } = this.options.acl;
+
+			if (!authorizer.checkPermission(ctx, enforcer)) {
+				authorizer.onError(ctx);
+				return;
+			}
+			await next();
+		};
+	}
+
+	/**
 	 * Create a route with the router instance.
 	 * @param {String} action - The action (create, index, get, update, delete)
 	 * @param {Object} { endpoint, method, validation, jwt } - An Object that defines a route
@@ -162,6 +184,9 @@ class Route {
 		}
 		if (this.options.json) {
 			args.push(koaBody());
+		}
+		if (this.options.acl) {
+			args.push(this._aclMiddleware);
 		}
 		args.push(validate(validation));
 		args.push((ctx, next) => this[action](ctx, next));
