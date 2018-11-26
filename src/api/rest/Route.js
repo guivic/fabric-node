@@ -38,7 +38,6 @@ const routeOptionsSchema = Joi.object().keys({
 		enforcer:   Joi.func().required(),
 		authorizer: Joi.object().optional().default(new RestAuthorizer()),
 	}).optional().default(null),
-	// before:     Joi.func().optional(),
 });
 
 const routesValidationSchema = Joi.object().keys({
@@ -54,8 +53,10 @@ const routesValidationSchema = Joi.object().keys({
  */
 function generateRoutesDefinitionSchema(action) {
 	const keys = {
-		validation:  routesValidationSchema,
-		isProtected: Joi.boolean().optional(),
+		validation:     routesValidationSchema,
+		isProtected:    Joi.boolean().optional(),
+		middlewares:    Joi.array().optional(),
+		koaBodyOptions: Joi.object().optional(),
 	};
 
 	if (availableActions.hasOwnProperty(action)) {
@@ -167,31 +168,82 @@ class Route {
 	}
 
 	/**
-	 * Create a route with the router instance.
-	 * @param {String} action - The action (create, index, get, update, delete)
-	 * @param {Object} { endpoint, method, validation, jwt } - An Object that defines a route
+	 * Activate the JWT middleware
+	 * @param {Array} args - The current route and its middlewares
+	 * @param {String} action - The current action
+	 * @param {Object} { endpoint, isProtected } - Options for JWT
 	 */
-	_createRoute(action, {
-		endpoint, method, validation = {}, isProtected = false,
-	}) {
-		const args = [`${this.name}${endpoint}`];
-
+	_jwt(args, action, { endpoint, isProtected }) {
 		if (isProtected) {
 			if (!this.options.JWT_SECRET) {
 				throw new Error(`route-invalid-jwt-secret: ${this.name}${endpoint} ${action}`);
 			}
 			args.push(jwt({ secret: this.options.JWT_SECRET }));
 		}
-		if (this.options.json) {
-			args.push(koaBody());
-		}
+	}
+
+	/**
+	 * Activate the ACL middleware
+	 * @param {Array} args - The current route and its middlewares
+	 */
+	_acl(args) {
 		if (this.options.acl) {
 			args.push(this._aclMiddleware);
 		}
-		args.push(validate(validation));
+	}
+
+	/**
+	 * Activate custom middlewares
+	 * @param {Array} args - The current route and its middlewares
+	 * @param {Object} { middlewares } - Object that contains a middlewares Array
+	 */
+	_customMiddlewares(args, { middlewares = [] }) {
+		if (middlewares.length > 0) {
+			middlewares.forEach((middleware) => {
+				args.push(middleware);
+			});
+		}
+	}
+
+	/**
+	 * Activate the KoaBody middleware
+	 * @param {Array} args - The current route and its middlewares
+	 * @param {Object} { koaBodyOptions } - Object with KoaBody options
+	 */
+	_koaBody(args, { koaBodyOptions = {} }) {
+		if (this.options.json) {
+			args.push(koaBody(koaBodyOptions));
+		}
+	}
+
+	/**
+	 * Activate the validation middleware
+	 * @param {Array} args - The current route and its middlewares
+	 * @param {Object} { validation } - Object that contains joi validation schema
+	 */
+	_joi(args, { validation = {} }) {
+		if (Object.keys(validation).length > 0) {
+			args.push(validate(validation));
+		}
+	}
+
+	/**
+	 * Create a route with the router instance.
+	 * @param {String} action - The action (create, index, get, update, delete)
+	 * @param {Object} routeOptions - An Object that defines a route with its options
+	 */
+	_createRoute(action, routeOptions) {
+		const args = [`${this.name}${routeOptions.endpoint}`];
+
+		this._jwt(args, action, routeOptions);
+		this._acl(args);
+		this._customMiddlewares(args, routeOptions);
+		this._koaBody(args, routeOptions);
+		this._joi(args, routeOptions);
+
 		args.push((ctx, next) => this[action](ctx, next));
 
-		this._router[method.toLowerCase()](...args);
+		this._router[routeOptions.method.toLowerCase()](...args);
 	}
 }
 
