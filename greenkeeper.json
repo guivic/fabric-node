@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "default": {
+      "packages": [
+        "example/mail/package.json",
+        "example/microservice/package.json",
+        "package.json"
+      ]
+    }
+  }
+}
