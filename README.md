@@ -3,7 +3,7 @@
 [![dev-dependencies status](https://david-dm.org/guivic/fabric-node/dev-status.svg)](https://david-dm.org/guivic/fabric-node#info=devDependencies)
 [![Build Status](https://travis-ci.org/guivic/fabric-node.svg?branch=master)](https://travis-ci.org/guivic/fabric-node)
 [![Coverage Status](https://coveralls.io/repos/github/guivic/fabric-node/badge.svg?branch=master)](https://coveralls.io/github/guivic/fabric-node?branch=master)
-[![npm version](https://badge.fury.io/js/%40guivic%2Ffabric-node.svg)](https://badge.fury.io/js/%40guivic%2Ffabric-node)
+[![npm version](https://badge.fury.io/js/%40guivic%2Ffabric-node.svg)](https://badge.fury.io/js/%40guivic%2Ffabric-node) [![Greenkeeper badge](https://badges.greenkeeper.io/guivic/fabric-node.svg)](https://greenkeeper.io/)
 
 node.js helpers to create quickly micro services and API
 
