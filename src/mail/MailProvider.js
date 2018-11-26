@@ -1,11 +1,11 @@
 const Joi = require('joi');
 
 const mailOptionsSchema = Joi.object().keys({
-	from:					Joi.string().email().required(),
-	to:						Joi.string().email().required(),
-	subject:			Joi.string().required(),
-	text:					Joi.string().required(),
-	attachments:	Joi.array(),
+	from:        Joi.string().email().required(),
+	to:          Joi.string().email().required(),
+	subject:     Joi.string().required(),
+	text:        Joi.string().required(),
+	attachments: Joi.array(),
 });
 
 /**
