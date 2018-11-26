@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const Joi = require('joi');
 const Gateway = require('../../src/api/graphql/Gateway');
 
 describe('Gateway', () => {
