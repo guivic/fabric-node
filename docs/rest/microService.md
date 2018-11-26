@@ -27,7 +27,7 @@ const { MicroService } = require('@guivic/fabric-node');
 - `datadogConfig`: **optional** [The DataDog configuration Object](https://github.com/topfreegames/koa-datadog-middleware#configuration--customization). Default `{}`.
 - `sentryDSN`: **optional** [The Sentry DSN key](https://docs.sentry.io/). Default `null`.
 - `requestLogging`: **optional** True if you want the API to log every requests. Default `true`,
-- `staticPaths`: **optional** An array with `{ url, path }` to expose folders. `url` is the api path (`/foo`) and path is the relative path to the folder. Default `[]`.
+- `staticPaths`: **optional** An array with `{ url, path }` to expose folders with [koa-static](https://github.com/koajs/static). `url` is the api path (`/foo`) and path is the relative path to the folder. Default `[]`.
 
 ## Configuration Examples
 
@@ -134,7 +134,9 @@ const app = new MicroService({
 
 ### staticPaths *`Array`*
 
-An array with `{ url, path }` to expose folders. `url` is the api path (`/foo`) and path is the relative path to the folder.
+An array with `{ url, path }` to expose folders with [koa-static](https://github.com/koajs/static).
+
+`url` is the api path (`/foo`) and path is the relative path to the folder.
 
 Default `[]`
 

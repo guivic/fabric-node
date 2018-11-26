@@ -48,6 +48,7 @@ class MicroService extends API {
 
 		this._initCors();
 		this._initRequestLogger();
+		this._initStaticPaths();
 
 		this._initDatadog();
 		this._initErrorHandler();
