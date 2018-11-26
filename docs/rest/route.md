@@ -84,6 +84,7 @@ You can defines sub endpoints by passing those attributes to the route configura
 Each attributes will accept this:
 - `validation`: **optional** An Object that contains Joi validation schema (in body / params / query).
 - `isProtected`: **optional** A Boolean that activates koa-jwt for the current endpoint (your client will need to send the JWT through the header). Default `false`
+- `middlewares`: **optional** An array that contains every middleware that you want to add to the endpoint. Default `[]`
 - `koaBodyOptions`: **optional** An Object that let you override the default koa-body options. Usefull if you need to handle upload for example. Default `{}`.
 
 #### validation *`Object`*
@@ -178,6 +179,34 @@ class AnimalRoute extends Route({
 
     me(ctx) { // the me handler
         ...
+    }
+});
+```
+
+#### middlewares *`Array`*
+
+An array that contains every middleware that you want to add to the endpoint.
+
+Default: `[]`
+
+```javascript
+class AnimalRoute extends Route({
+    constructor() {
+        super('/animals', {
+            create: {
+                validation: { ... },
+                middlewares: [ // /animals POST will use this middleware
+                    async (ctx, next) => {
+                        const start = Date.now();
+                        await next();
+                        const ms = Date.now() - start;
+                        console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
+                    },
+                ],
+            },
+        }, {
+            json: true,
+        });
     }
 });
 ```
