@@ -3,7 +3,7 @@ const koaBody = require('koa-bodyparser');
 const KoaRouter = require('koa-router');
 const koaJwt = require('koa-jwt');
 const { graphqlKoa, graphiqlKoa } = require('apollo-server-koa');
-const { apolloUploadKoa } = require('apollo-upload-server');
+const { graphqlUpload } = require('graphql-upload');
 
 const { makeExecutableSchema } = require('graphql-tools');
 
@@ -91,7 +91,7 @@ class Gateway extends API {
 			router.post('/graphql', this._aclMiddleware);
 		}
 
-		router.post('/graphql', this.options.graphqlUpload ? apolloUploadKoa() : (ctx, next) => next(), graphqlKoa((ctx) => ({
+		router.post('/graphql', this.options.graphqlUpload ? graphqlUpload() : (ctx, next) => next(), graphqlKoa((ctx) => ({
 			schema:  gschema,
 			context: {
 				user: ctx.state && ctx.state.user ? ctx.state.user : null,
