@@ -51,9 +51,9 @@ class Resolver {
 	 */
 	_wrapper(name, params) {
 		return async (obj, args, context, info) => {
-			if (!this.hasOwnProperty(name)) {
-				throw new Error(`resolver-method-not-found: ${name}`);
-			}
+			// if (!this.hasOwnProperty(name)) {
+			// 	throw new Error(`resolver-method-not-found: ${name}`);
+			// }
 			if (params.validation) {
 				args = await this._validate(args, params.validation);
 			}
