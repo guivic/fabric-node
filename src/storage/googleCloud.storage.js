@@ -4,12 +4,8 @@ const path = require('path');
 const Joi = require('joi');
 
 const schema = Joi.object().keys({
-	project_id:  Joi.string().required(),
 	bucket:      Joi.string().required(),
-	credentials: Joi.object().keys({
-		client_email: Joi.string().required(),
-		private_key:  Joi.string().required(),
-	}).required(),
+	credentials: Joi.object().required(),
 });
 
 /**
@@ -29,7 +25,6 @@ class GoogleCloudStorage {
 		this.options = value;
 
 		this._storage = new Storage({
-			projectId:   this.options.project_id,
 			credentials: this.options.credentials,
 		});
 
