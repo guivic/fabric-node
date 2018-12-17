@@ -223,7 +223,11 @@ class Route {
 	 */
 	_joi(args, { validation = {} }) {
 		if (Object.keys(validation).length > 0) {
-			args.push(validate(validation));
+			args.push(validate(Object.assign(validation, {
+				opt: {
+					allowUnknown: false,
+				},
+			})));
 		}
 	}
 
