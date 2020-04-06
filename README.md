@@ -5,27 +5,61 @@
 [![Coverage Status](https://coveralls.io/repos/github/guivic/fabric-node/badge.svg?branch=master)](https://coveralls.io/github/guivic/fabric-node?branch=master)
 [![npm version](https://badge.fury.io/js/%40guivic%2Ffabric-node.svg)](https://badge.fury.io/js/%40guivic%2Ffabric-node)
 
-node.js helpers to create quickly micro services and API
+fabric-node let you create REST (with [Koa](https://github.com/koajs/koa)) and GraphQL (with [Apollo Server](https://github.com/apollographql/apollo-server)) api by letting you focus on the code and logic of your application instead of the framework configuration.
 
-### Microservice
-```javascript
-(async function () {
-	try {
-		const PORT = process.env.PORT || 3000;
-		const microService = new MicroService({
-			port:       PORT, // default: 3000
-			initMethod: () => { // default: () => {}
-				console.log('code runned before starting the microservice');
-			},
-			bodyParserJSON: true, // body parser configured to accept json (default: false)
-			fileUpload:     true, // to accept file upload (default: false)
-			sentryDSN:      'SENTRY_KEY', // to configure sentry with the microservice (default: null)
-		});
+Powered by [Guivic](https://guivic.io)
 
-		await microService.start();
-		console(`microservice listening on port ${PORT}`);
-	} catch (error) {
-		console.log(error.message);
-	}
-}());
+## Installation
+
+Fabric-node requires __node v8__ or higher.
+
 ```
+$ yarn add @guivic/fabric-node
+```
+
+## Documentation
+
+ - [Getting started](docs/index.md)
+
+ - [What is the purpose ?](#what-is-the-purpose-?)
+
+ - [How to contribute ?](#how-to-contribute-?)
+
+ - [Running tests](#running-tests)
+
+ - [License](#License)
+
+## What is the purpose ?
+
+I have created fabric-node because I am tired of configuring again and again web frameworks like Koa.js or ApolloServer.
+
+The purpose of fabric-node is to let you focus on the code of your application (handlers or resolvers) without thinking about the fact that you have well configured the framework.
+
+For example, in Koa, if you want to have a production ready API with JWT auth, ACL and logs you will have to try multiple solutions, learn each modules, see which one is not working as well as you want, etc.
+
+With fabric-node, you will just have to go through the documentation to see how to activate what you want.
+For example, you need a JWT authentification ? This is easy, just send your JWT_SECRET to fabric-node, tell me which route need to be "protected" with just a boolean and tada: it works and it's production ready!
+
+#### Ok it sounds fun but I need to plug a coffee machine to my API how can I do that?
+
+This is not a problem, the code is well documented, you have two solutions:
+- develop your feature and make a PR. See [How to contribute](#how-to-contribute)
+- create an issue and let me add it to the code
+
+The goal is to create something that handle all of the common needs for a basic production API.
+
+## How to contribute ?
+
+- Don't hesitate to create a PR if something is missing (and don't forget to write some tests)
+- Help me improving the [documentation](docs/index.md)
+
+
+## Running the tests
+
+```shell
+yarn test
+```
+
+## License
+
+MIT
