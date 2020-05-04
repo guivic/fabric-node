@@ -73,7 +73,7 @@
     "nodemailer-mandrill-transport": "^1.2.0",
     "nodemailer-sendgrid": "^1.0.2",
     "raven": "^2.4.0",
-    "winston-lludol": "^0.0.5"
+    "winston-lludol": "^0.1.0"
   },
   "nyc": {
     "exclude": [
