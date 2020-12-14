@@ -69,7 +69,7 @@
     "koa-static": "^5.0.0",
     "koa2-cors": "^2.0.6",
     "koa2-validation": "^0.1.0",
-    "nodemailer": "^4.4.2",
+    "nodemailer": "^6.4.17",
     "nodemailer-mandrill-transport": "^1.2.0",
     "nodemailer-sendgrid": "^1.0.2",
     "raven": "^2.4.0",
